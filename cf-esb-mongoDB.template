@@ -1,0 +1,290 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "AWS CloudFormation Template For WebServer",
+  "Parameters" : {
+      "KeyName": {
+         "Description" : "Ssh keys existentes para as novas Instances",
+         "Type": "AWS::EC2::KeyPair::KeyName",
+         "ConstraintDescription" : "Ssh keys existentes para as novas Instances."
+      },
+      "InstanceType" : {
+         "Description" : "WebServer EC2 instance type",
+         "Type" : "String",
+         "Default" : "t2.micro",
+         "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium", "m1.small", "m1.medium", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge", "c1.medium", "c1.xlarge", "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge", "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge", "g2.2xlarge", "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge", "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge", "d2.xlarge", "d2.2xlarge", "d2.4xlarge", "d2.8xlarge", "hi1.4xlarge", "hs1.8xlarge", "cr1.8xlarge", "cc2.8xlarge", "cg1.4xlarge"],
+         "ConstraintDescription" : "must be a valid EC2 instance type."
+      },
+      "vpc": {
+         "Type": "AWS::EC2::VPC::Id",
+         "Description": "Selecione seu VPC-ID.",
+         "AllowedPattern": "vpc-[0-9a-z]{8}"
+      },
+      "ambiente": {
+         "Description": "Ambiente que sera usado.",
+         "Type": "String",
+         "Default": "dev",
+         "AllowedValues": [ "dev", "hml", "prd" ]
+      },
+      "az1": {
+         "Description": "AZ1 que sera usada para criacao da Instance",
+         "Type": "AWS::EC2::AvailabilityZone::Name"
+      },
+      "az2": {
+         "Description": "AZ2 que sera usada para criacao da Instance",
+         "Type": "AWS::EC2::AvailabilityZone::Name"
+      },
+
+      "az3": {
+         "Description": "AZ3 que sera usada para criacao da Instance",
+         "Type": "AWS::EC2::AvailabilityZone::Name"
+      },
+
+
+      "Web01": {
+         "Description": "Nome da Instance01",
+         "Type": "String",
+         "Default": ""
+      },
+      "Web02": {
+         "Description": "Nome da Instance02",
+         "Type": "String",
+         "Default": ""
+      }
+  },
+  "Conditions" : {
+  },
+  "Mappings" : {
+      "AWSInstanceType2Arch" : {
+         "t1.micro"    : { "Arch" : "PV64"   },
+         "t2.micro"    : { "Arch" : "HVM64"  },
+         "t2.small"    : { "Arch" : "HVM64"  },
+         "t2.medium"   : { "Arch" : "HVM64"  },
+         "m1.small"    : { "Arch" : "PV64"   },
+         "m1.medium"   : { "Arch" : "PV64"   },
+         "m1.large"    : { "Arch" : "PV64"   },
+         "m1.xlarge"   : { "Arch" : "PV64"   },
+         "m2.xlarge"   : { "Arch" : "PV64"   },
+         "m2.2xlarge"  : { "Arch" : "PV64"   },
+         "m2.4xlarge"  : { "Arch" : "PV64"   },
+         "m3.medium"   : { "Arch" : "HVM64"  },
+         "m3.large"    : { "Arch" : "HVM64"  },
+         "m3.xlarge"   : { "Arch" : "HVM64"  },
+         "m3.2xlarge"  : { "Arch" : "HVM64"  },
+         "c1.medium"   : { "Arch" : "PV64"   },
+         "c1.xlarge"   : { "Arch" : "PV64"   },
+         "c3.large"    : { "Arch" : "HVM64"  },
+         "c3.xlarge"   : { "Arch" : "HVM64"  },
+         "c3.2xlarge"  : { "Arch" : "HVM64"  },
+         "c3.4xlarge"  : { "Arch" : "HVM64"  },
+         "c3.8xlarge"  : { "Arch" : "HVM64"  },
+         "c4.large"    : { "Arch" : "HVM64"  },
+         "c4.xlarge"   : { "Arch" : "HVM64"  },
+         "c4.2xlarge"  : { "Arch" : "HVM64"  },
+         "c4.4xlarge"  : { "Arch" : "HVM64"  },
+         "c4.8xlarge"  : { "Arch" : "HVM64"  },
+         "g2.2xlarge"  : { "Arch" : "HVMG2"  },
+         "r3.large"    : { "Arch" : "HVM64"  },
+         "r3.xlarge"   : { "Arch" : "HVM64"  },
+         "r3.2xlarge"  : { "Arch" : "HVM64"  },
+         "r3.4xlarge"  : { "Arch" : "HVM64"  },
+         "r3.8xlarge"  : { "Arch" : "HVM64"  },
+         "i2.xlarge"   : { "Arch" : "HVM64"  },
+         "i2.2xlarge"  : { "Arch" : "HVM64"  },
+         "i2.4xlarge"  : { "Arch" : "HVM64"  },
+         "i2.8xlarge"  : { "Arch" : "HVM64"  },
+         "d2.xlarge"   : { "Arch" : "HVM64"  },
+         "d2.2xlarge"  : { "Arch" : "HVM64"  },
+         "d2.4xlarge"  : { "Arch" : "HVM64"  },
+         "d2.8xlarge"  : { "Arch" : "HVM64"  },
+         "hi1.4xlarge" : { "Arch" : "HVM64"  },
+         "hs1.8xlarge" : { "Arch" : "HVM64"  },
+         "cr1.8xlarge" : { "Arch" : "HVM64"  },
+         "cc2.8xlarge" : { "Arch" : "HVM64"  }
+      },
+
+      "AWSRegionArch2AMI" : { "sa-east-1" : {"PV64" : "ami-55883348", "HVM64" : "ami-4d883350", "HVMG2" : "NOT_SUPPORTED"}
+      },
+      "netaz" : {
+         "sa-east-1a": { "dev" : "subnet-b4a68fd1", "hml" : "subnet-b7a68fd2","prd" : "subnet-b6a68fd3","dmz" : "subnet-d8a68fbd"},
+         "sa-east-1b": { "dev" : "subnet-bea333c9", "hml" : "subnet-bda333ca","prd" : "subnet-bca333cb","dmz" : "subnet-bfa333c8"},
+         "sa-east-1c": { "dev" : "subnet-a86ebcf1", "hml" : "subnet-ab6ebcf2","prd" : "subnet-aa6ebcf3","dmz" : "subnet-a96ebcf0"}
+      }
+
+
+  },
+
+  "Resources" : {
+    "EC2Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "IamInstanceProfile": { "Ref": "RootInstanceProfile" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },{ "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "NetworkInterfaces": [ {
+          "AssociatePublicIpAddress": "true",
+          "DeviceIndex": "0",
+          "GroupSet": [{ "Ref" : "InstanceSecurityGroup" }],
+          "SubnetId" :{ "Fn::FindInMap" : [ "netaz", {"Ref" : "az1"  },{ "Ref" : "ambiente" } ]}
+          }],
+          "Tags" : [
+            {"Key" : "Name", "Value" : {"Fn::Join" : [ "-", ["srv-lx",{"Ref" : "az1" }, { "Ref" : "AWS::StackName" },"01" ] ]}},
+            {"Key" : "Environment", "Value" : { "Ref" : "ambiente" }},
+            {"Key" : "Owner", "Value" :  "rafael.nize"}
+          ],
+          "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+            "#!/bin/bash\n",
+            "apt-get update -y", "\n",
+            "apt-get install git -y", "\n",
+            "sudo apt-get install nodejs -y", "\n",
+            "sudo apt-get install npm -y", "\n",
+            "sudo npm install bower -g", "\n",
+            "mkdir /app","\n",
+            "sudo ln -s /usr/bin/nodejs /usr/bin/node","\n",
+            "chown ubuntu.ubuntu /app","\n",
+            "apt-get install awscli -y","\n",
+            "aws s3 cp s3://esb-01/retira.tar.gz /tmp --region sa-east-1","\n",
+            "tar xvfz /tmp/retira.tar.gz --directory=/app", "\n",
+            "cd /app/retiraloja","\n",
+            "nodejs server.js &","\n"
+            ]]}}
+          }
+        },
+        "EC2Instance2" : {
+          "Type" : "AWS::EC2::Instance",
+          "Properties" : {
+            "InstanceType" : { "Ref" : "InstanceType" },
+            "IamInstanceProfile": { "Ref": "RootInstanceProfile" },
+            "KeyName" : { "Ref" : "KeyName" },
+            "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+              { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+              "NetworkInterfaces": [ {
+                "AssociatePublicIpAddress": "true",
+                "DeviceIndex": "0",
+                "GroupSet": [{ "Ref" : "InstanceSecurityGroup" }],
+                "SubnetId" :{ "Fn::FindInMap" : [ "netaz", {"Ref" : "az2"  },{ "Ref" : "ambiente" } ]}
+              }],
+                "Tags" : [
+                  {"Key" : "Name", "Value" : {"Fn::Join" : [ "-", ["srv-lx",{"Ref" : "az2" }, { "Ref" : "AWS::StackName" },"02" ] ]}},
+                  {"Key" : "Environment", "Value" : { "Ref" : "ambiente" }},
+                  {"Key" : "Owner", "Value" :  "rafael.nize"}
+                ],
+                "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+                  "#!/bin/bash\n",
+                  "apt-get update -y", "\n",
+                  "apt-get install git -y", "\n",
+                  "sudo apt-get install nodejs -y", "\n",
+                  "sudo apt-get install npm -y", "\n",
+                  "sudo npm install bower -g", "\n",
+                  "mkdir /app","\n",
+                  "sudo ln -s /usr/bin/nodejs /usr/bin/node","\n",
+                  "chown ubuntu.ubuntu /app","\n",
+                  "apt-get install awscli -y","\n",
+                  "aws s3 cp s3://esb-01/retira.tar.gz /tmp --region sa-east-1","\n",
+                  "tar xvfz /tmp/retira.tar.gz --directory=/app", "\n",
+                  "cd /app/retiraloja","\n",
+                  "nodejs server.js &","\n"
+                  ]]}}
+                }
+              },
+
+ "RootRole": {
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+       "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+             "Effect": "Allow",
+             "Principal": {
+                "Service": [ "ec2.amazonaws.com" ]
+             },
+             "Action": [ "sts:AssumeRole" ]
+          } ]
+       },
+       "Path": "/"
+    }
+ },
+ "RolePolicies": {
+    "Type": "AWS::IAM::Policy",
+    "Properties": {
+       "PolicyName": "root",
+       "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"
+          } ]
+       },
+       "Roles": [ { "Ref": "RootRole" } ]
+    }
+ },
+ "RootInstanceProfile": {
+    "Type": "AWS::IAM::InstanceProfile",
+    "Properties": {
+       "Path": "/",
+       "Roles": [ { "Ref": "RootRole" } ]
+    }
+ },
+
+     "InstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable SSH access via port 22",
+        "VpcId" : {"Ref" : "vpc"},
+        "SecurityGroupIngress" : [
+             { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
+             { "IpProtocol" : "tcp", "FromPort" : "8080", "ToPort" : "8080", "CidrIp" : "0.0.0.0/0" },
+             { "IpProtocol" : "icmp", "FromPort" : "8", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0" } ]
+        }
+      },
+
+       "ElasticLoadBalancer" : {
+           "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+           "Properties" : {
+           "Subnets" :  [
+                       { "Fn::FindInMap" : [ "netaz", {"Ref" : "az1"  },"dmz" ]},
+                       { "Fn::FindInMap" : [ "netaz", {"Ref" : "az2"  },"dmz" ]} ],
+
+           "Instances" : [ { "Ref" : "EC2Instance" },{ "Ref" : "EC2Instance2" } ],
+           "Listeners": [{ "LoadBalancerPort": "80", "InstancePort": "8080", "Protocol": "HTTP" }],
+           "HealthCheck": { "Target": "HTTP:8080/", "HealthyThreshold": "3","UnhealthyThreshold": "5", "Interval": "30", "Timeout": "5" },
+           "ConnectionDrainingPolicy": { "Enabled" : "true", "Timeout" : "60"  }}
+        },
+        "HostRecord" : {
+        "Type" : "AWS::Route53::RecordSet",
+        "Properties" : {
+        "HostedZoneId": "Z1D2HJUEJDU50C",
+        "Comment" : "DNS name for my instance.",
+        "Name" : { "Fn::Join" : [ "", [{"Ref" : "Web01"}, ".mlg-a.intranet."] ] },
+        "Type" : "A",
+        "TTL" : "600",
+        "ResourceRecords" : [ { "Fn::GetAtt" : [ "EC2Instance", "PrivateIp" ]}] }
+      },
+        "HostRecord2" : {
+        "Type" : "AWS::Route53::RecordSet",
+        "Properties" : {
+        "HostedZoneId": "Z1D2HJUEJDU50C",
+        "Comment" : "DNS name for my instance.",
+        "Name" : { "Fn::Join" : [ "", [{"Ref" : "Web02"}, ".mlg-a.intranet."] ] },
+        "Type" : "A",
+        "TTL" : "600",
+        "ResourceRecords" : [ { "Fn::GetAtt" : [ "EC2Instance2", "PrivateIp" ]}] }
+      }
+},
+
+  "Outputs" : {
+    "Web01" : {
+      "Description" : "InstanceId Web01",
+      "Value" : { "Ref" : "EC2Instance" } },
+
+    "Web02" : {
+    "Description" : "InstanceId Web02",
+    "Value" : { "Ref" : "EC2Instance2" } },
+
+    "URL" : {
+      "Description" : "URL of the website",
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}]]}
+    }
+  }
+}
